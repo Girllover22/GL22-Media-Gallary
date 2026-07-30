@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file: data: blob:; script-src 'self'; style-src 'self'; img-src 'self' file: data: blob:; media-src 'self' file: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Girllover22 Cinema</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand"><span>G22</span><strong>CINEMA</strong></div>
+    <nav>
+      <button class="nav active" data-view="home">⌂ <span>Home</span></button>
+      <button class="nav" data-view="videos">▶ <span>All Videos</span></button>
+      <button class="nav" data-view="pictures">▣ <span>All Pictures</span></button>
+      <button class="nav" data-view="recent">◷ <span>Recently Added</span></button>
+      <button class="nav" data-view="collections">＋ <span>Collections</span></button>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="privacy-card"><b>🔒 LOCAL PRIVACY LOCK</b><span>No cloud</span><span>No telemetry</span><span>No external metadata</span></div>
+    <button id="settings-btn" class="nav">⚙ <span>Settings</span></button>
+  </aside>
+
+  <main class="main-shell">
+    <header class="topbar">
+      <div><h1 id="page-title">Your Cinema</h1><p id="library-count">Private local library</p></div>
+      <div class="search-wrap">
+        <span>⌕</span><input id="search" autocomplete="off" placeholder="Search everything… type:video ext:mkv size:>1GB path:Holiday">
+      </div>
+      <select id="sort"><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option><option value="largest">Largest</option><option value="smallest">Smallest</option></select>
+      <button id="scan-folders">Fast Scan</button><button id="scan-drives" class="primary">Scan All Drives</button><div class="controller-hint"><kbd>A</kbd> Open <kbd>B</kbd> Back</div>
+    </header>
+
+    <section class="chips"><button data-query="type:video ">Videos</button><button data-query="type:picture ">Pictures</button><button data-query="ext:mp4 ">MP4</button><button data-query="ext:mkv ">MKV</button><button data-query="size:>1GB ">Large &gt;1GB</button><button data-query="date:7d ">Last 7 days</button><button data-query="">Clear</button><span>Operators: type: ext: path: name: size: date: exact:</span></section>
+
+    <section id="scan-panel" class="scan-panel hidden"><div class="scan-head"><b id="scan-phase">Scanning drives</b><button id="cancel-scan">Cancel</button></div><div class="progress"><i id="scan-progress"></i></div><div class="scan-grid"><div><strong id="stat-folders">0</strong><span>Folders</span></div><div><strong id="stat-found">0</strong><span>Media</span></div><div><strong id="stat-videos">0</strong><span>Videos</span></div><div><strong id="stat-pictures">0</strong><span>Pictures</span></div><div><strong id="stat-speed">0/s</strong><span>Speed</span></div><div><strong id="stat-time">0s</strong><span>Elapsed</span></div></div><small id="scan-current"></small></section>
+
+    <div id="content-scroll">
+      <section id="hero" class="hero empty"><video id="hero-video" muted loop playsinline></video><div class="hero-backdrop"></div><div class="hero-copy"><div class="eyebrow">FEATURED FROM YOUR PRIVATE LIBRARY</div><h2 id="hero-title">Your media. Beautifully organised.</h2><p id="hero-meta">Add a folder or scan every drive to begin.</p><div><button id="hero-play" class="hero-play" disabled>▶ Play with Sound</button><button id="hero-info" disabled>ⓘ More Info</button><span class="muted-badge">Muted local preview</span></div></div></section>
+      <section id="results"></section>
+    </div>
+  </main>
+</div>
+
+<div id="player-overlay" class="overlay hidden"><div class="player-top"><button id="player-close">← Back to Cinema</button><strong id="player-title"></strong><button id="show-folder">Open Folder</button></div><video id="main-player" controls></video><img id="main-image" alt=""></div>
+<div id="details" class="modal hidden"><div class="modal-card"><button id="details-close" class="x">×</button><div id="details-visual"></div><h2 id="details-title"></h2><p id="details-meta"></p><p id="details-path"></p><button id="details-open" class="primary">Open</button></div></div>
+<div id="settings" class="modal hidden"><div class="modal-card settings-card"><button id="settings-close" class="x">×</button><h2>Girllover22 Cinema Settings</h2><p class="subtle">All settings and indexes stay inside this application folder.</p><div id="folder-list"></div><button id="add-folder">＋ Add Folder or Drive</button><label><input id="autoplay-setting" type="checkbox" checked> Muted hero autoplay</label><label><input id="skip-system-setting" type="checkbox" checked> Skip protected system folders</label><label><input id="keep-index-setting" type="checkbox" checked> Keep lightweight portable media index (recommended; no thumbnails)</label><button id="save-settings" class="primary">Save Settings</button></div></div>
+<div id="controller-toast" class="controller-toast">Controller connected</div><script src="renderer.js"></script>
+</body></html>

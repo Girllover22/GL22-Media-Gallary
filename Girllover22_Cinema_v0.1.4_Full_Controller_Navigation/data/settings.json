@@ -1,0 +1,18 @@
+{
+  "libraryFolders": [],
+  "privacyLock": true,
+  "autoplayMuted": true,
+  "skipSystemFolders": true,
+  "controllerSupport": true,
+  "controllerLayout": "xbox",
+  "controllerDeadzone": 0.52,
+  "premiumOverlayScrollbars": true,
+  "smoothRowScrolling": true,
+  "controllerNavigation": "explicit_zones",
+  "controllerInitialRepeatDelayMs": 330,
+  "controllerRepeatDelayMs": 125,
+  "controllerMediaRows": true,
+  "controllerHeroControls": true,
+  "controllerSearchControls": true,
+  "controllerPlayerControls": true
+}
