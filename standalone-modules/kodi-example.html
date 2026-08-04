@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kodi Media Center Demo</title>
+  <link rel="stylesheet" href="kodi-gui.css">
+  <style>
+    body { margin:0; padding:0; }
+    .modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.95); display:flex; align-items:center; justify-content:center; z-index:200; opacity:0; pointer-events:none; transition:opacity .3s; }
+    .modal.active { opacity:1; pointer-events:auto; }
+    .player-modal { width:90vw; height:90vh; max-width:1200px; max-height:800px; background:#000; border-radius:8px; border:2px solid #ff6b6b; overflow:hidden; display:flex; flex-direction:column; }
+    .player-modal video { flex:1; width:100%; background:#000; }
+    .player-modal__controls { padding:15px; background:rgba(0,0,0,.8); display:flex; gap:10px; border-top:1px solid #ff6b6b; }
+    .player-modal__controls button { padding:8px 16px; background:#ff6b6b; color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:13px; }
+    .player-modal__controls button:hover { background:#ff8c42; }
+  </style>
+</head>
+<body>
+  <div id="kodi-container"></div>
+  <div id="player-modal" class="modal">
+    <div class="player-modal">
+      <video id="player-video" controls playsinline></video>
+      <div class="player-modal__controls">
+        <button id="player-prev">⏮ Previous</button>
+        <button id="player-next">Next ⏭</button>
+        <button id="player-close">✕ Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="media-library.js"></script>
+  <script src="gamepad-controller.js"></script>
+  <script src="kodi-gui.js"></script>
+  <script>
+    const library = new MediaLibrary();
+    const sampleMedia = [
+      { path:'/v1.mp4', url:'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4', name:'Big Buck Bunny', extension:'.mp4', type:'video', size:472528893, modified:Date.now()-86400000, folder:'Movies', added:Date.now() },
+      { path:'/v2.mp4', url:'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4', name:'Elephants Dream', extension:'.mp4', type:'video', size:366014809, modified:Date.now()-172800000, folder:'Movies', added:Date.now() },
+      { path:'/v3.mp4', url:'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4', name:'For Bigger Blazes', extension:'.mp4', type:'video', size:324800000, modified:Date.now()-259200000, folder:'Movies', added:Date.now() }
+    ];
+    library.setFiles(sampleMedia);
+
+    const gui = new KodiGUI('#kodi-container', { library, showPreview:true });
+    const gamepad = new GamepadController({ deadzone:0.2 });
+
+    const playerModal = document.getElementById('player-modal');
+    const playerVideo = document.getElementById('player-video');
+    let currentFile = null, playlist = [], currentIndex = -1;
+
+    gui.on('select', ({file,index})=>{ currentFile=file; playlist=library.getFiles(); currentIndex=index; playFile(file); });
+    
+    function playFile(file) {
+      if(file.type!=='video'){gui.toast('Videos only'); return;}
+      playerVideo.src=file.url; playerModal.classList.add('active'); playerVideo.play();
+    }
+
+    document.getElementById('player-prev').onclick=()=>{ if(currentIndex>0){ currentIndex--; playFile(playlist[currentIndex]); } };
+    document.getElementById('player-next').onclick=()=>{ if(currentIndex<playlist.length-1){ currentIndex++; playFile(playlist[currentIndex]); } };
+    document.getElementById('player-close').onclick=()=>{ playerModal.classList.remove('active'); playerVideo.pause(); playerVideo.src=''; };
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&playerModal.classList.contains('active')){ document.getElementById('player-close').click(); } });
+
+    gamepad.on('connect',()=>gui.toast('🎮 Controller connected'));
+    gamepad.on('buttondown',(data)=>{
+      if(!playerModal.classList.contains('active')){
+        if(data.button===0){ const s=gui.getSelected(); if(s)gui.selectFile(s,gui.focusedCardIndex); }
+        if(data.button===4)gui.handleGamepadInput('left');
+        if(data.button===5)gui.handleGamepadInput('right');
+      }else{
+        if(data.button===0)playerVideo.paused?playerVideo.play():playerVideo.pause();
+        if(data.button===1)document.getElementById('player-close').click();
+        if(data.button===4)document.getElementById('player-prev').click();
+        if(data.button===5)document.getElementById('player-next').click();
+      }
+    });
+    gamepad.on('leftstick',(data)=>{
+      if(!playerModal.classList.contains('active')){
+        if(Math.abs(data.x)>0.5)gui.handleGamepadInput(data.x>0?'right':'left');
+        if(Math.abs(data.y)>0.5)gui.handleGamepadInput(data.y>0?'down':'up');
+      }
+    });
+  </script>
+</body>
+</html>
