@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Player + Gamepad Example</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .media-player {
+      background: #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .media-player__video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+    }
+
+    .media-player__info {
+      padding: 20px;
+    }
+
+    .media-player__title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .media-player__time {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    .media-player__time span {
+      margin: 0 5px;
+    }
+
+    .media-player__progress {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .media-player__progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b6b, #ff8c42);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 16px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #444;
+      border-color: #666;
+    }
+
+    button.focused {
+      background: #ff6b6b;
+      border-color: #ff6b6b;
+      box-shadow: 0 0 16px rgba(255, 107, 107, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+      font-family: monospace;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .status-label {
+      color: #aaa;
+    }
+
+    .status-value {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+
+    .hint {
+      background: #1a3a1a;
+      border-left: 3px solid #6bff6b;
+      padding: 16px;
+      margin-top: 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 Media Player + Gamepad Controller</h1>
+
+    <div id="player-container"></div>
+
+    <div class="controls">
+      <button id="btn-play">Play</button>
+      <button id="btn-pause">Pause</button>
+      <button id="btn-seek-back">⏮ -10s</button>
+      <button id="btn-seek-forward">⏭ +10s</button>
+      <button id="btn-next">Next</button>
+      <button id="btn-prev">Previous</button>
+      <button id="btn-volume-up">🔊 Volume +</button>
+      <button id="btn-volume-down">🔉 Volume -</button>
+      <button id="btn-rate-faster">⏩ Speed +</button>
+      <button id="btn-rate-slower">⏪ Speed -</button>
+    </div>
+
+    <div class="status">
+      <div class="status-item">
+        <span class="status-label">🎮 Controller:</span>
+        <span class="status-value" id="status-controller">Disconnected</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">▶️ Status:</span>
+        <span class="status-value" id="status-playing">Stopped</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">📁 Current:</span>
+        <span class="status-value" id="status-current">None</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">🔊 Volume:</span>
+        <span class="status-value" id="status-volume">100%</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">⚡ Speed:</span>
+        <span class="status-value" id="status-speed">1x</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">⌨️ Last Button:</span>
+        <span class="status-value" id="status-button">—</span>
+      </div>
+    </div>
+
+    <div class="hint">
+      <strong>Controller Support:</strong> Press A to play/pause, B to go back, use D-pad or
+      left stick to navigate, LB/RB to seek ±10s, and Start for more info.
+    </div>
+  </div>
+
+  <script src="media-player.js"></script>
+  <script src="gamepad-controller.js"></script>
+  <script src="navigator-helper.js"></script>
+
+  <script>
+    const player = new MediaPlayer('#player-container', {
+      autoplay: false,
+      muted: false,
+      controls: true,
+    });
+
+    const gamepad = new GamepadController({
+      deadzone: 0.2,
+    });
+
+    const navigator = new NavigatorHelper({
+      focusClass: 'focused',
+    });
+
+    // Register focus zones for buttons
+    navigator.registerZone('controls', '.controls button');
+
+    // Sample playlist
+    const playlist = [
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4', name: 'Big Buck Bunny' },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4', name: 'Elephants Dream' },
+      { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4', name: 'For Bigger Blazes' },
+    ];
+
+    player.loadPlaylist(playlist);
+
+    // Button controls
+    document.getElementById('btn-play').onclick = () => player.play();
+    document.getElementById('btn-pause').onclick = () => player.pause();
+    document.getElementById('btn-seek-back').onclick = () => player.skipBackward(10);
+    document.getElementById('btn-seek-forward').onclick = () => player.skipForward(10);
+    document.getElementById('btn-next').onclick = () => player.playNext();
+    document.getElementById('btn-prev').onclick = () => player.playPrevious();
+    document.getElementById('btn-volume-up').onclick = () => player.changeVolume(0.1);
+    document.getElementById('btn-volume-down').onclick = () => player.changeVolume(-0.1);
+    document.getElementById('btn-rate-faster').onclick = () => player.setPlaybackRate(player.playbackRate + 0.25);
+    document.getElementById('btn-rate-slower').onclick = () => player.setPlaybackRate(player.playbackRate - 0.25);
+
+    // Focus management
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigator.move('up');
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        navigator.move('down');
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigator.activate();
+      }
+    });
+
+    // Gamepad controls
+    gamepad.on('connect', (data) => {
+      console.log('Gamepad connected:', data);
+      document.getElementById('status-controller').textContent = data.id;
+      navigator.focus(document.querySelector('.controls button'));
+    });
+
+    gamepad.on('disconnect', () => {
+      document.getElementById('status-controller').textContent = 'Disconnected';
+    });
+
+    gamepad.on('buttondown', (data) => {
+      document.getElementById('status-button').textContent = data.name;
+      console.log('Button pressed:', data);
+
+      switch (data.button) {
+        case 0: // A
+          player.togglePlayPause();
+          break;
+        case 1: // B
+          navigator.move('up');
+          break;
+        case 4: // LB
+          player.skipBackward(10);
+          break;
+        case 5: // RB
+          player.skipForward(10);
+          break;
+        case 9: // Start
+          navigator.focusZone('controls', 0);
+          break;
+      }
+    });
+
+    gamepad.on('leftstick', (data) => {
+      // Use left stick for navigation
+      if (Math.abs(data.x) > 0.5) {
+        navigator.move(data.x > 0 ? 'right' : 'left');
+      }
+      if (Math.abs(data.y) > 0.5) {
+        navigator.move(data.y > 0 ? 'down' : 'up');
+      }
+    });
+
+    // Update status display
+    player.on('play', () => {
+      document.getElementById('status-playing').textContent = 'Playing';
+    });
+
+    player.on('pause', () => {
+      document.getElementById('status-playing').textContent = 'Paused';
+    });
+
+    player.on('load', (file) => {
+      document.getElementById('status-current').textContent = file.name;
+      player.play();
+    });
+
+    player.on('volumechange', (vol) => {
+      document.getElementById('status-volume').textContent = Math.round(vol * 100) + '%';
+    });
+
+    player.on('ratechange', (rate) => {
+      document.getElementById('status-speed').textContent = rate + 'x';
+    });
+
+    // Load first media on start
+    player.load(playlist[0]);
+    player.currentIndex = 0;
+  </script>
+</body>
+</html>
